@@ -1,0 +1,68 @@
+{
+    "2024_VBSWWH_OSWW_C2V1p0_13p6TeV_5f_LO": {
+        "all_events": [
+            192.79275588719804,
+            null
+        ],
+        "exactly0lep": [
+            152.8587201143996,
+            null
+        ],
+        "exactly0lep_exactly2fj": [
+            38.72001649999992,
+            null
+        ],
+        "exactly0lep_exactly1fj": [
+            62.63944338880015,
+            null
+        ],
+        "exactly0lep_leq2fj": [
+            145.64935393119993,
+            null
+        ]
+    },
+    "2024_VBSWWH_OSWW_C2V2p0_13p6TeV_5f_LO": {
+        "all_events": [
+            192.79275588719804,
+            null
+        ],
+        "exactly0lep": [
+            152.8587201143996,
+            null
+        ],
+        "exactly0lep_exactly2fj": [
+            38.72001649999992,
+            null
+        ],
+        "exactly0lep_exactly1fj": [
+            62.63944338880015,
+            null
+        ],
+        "exactly0lep_leq2fj": [
+            145.64935393119993,
+            null
+        ]
+    },
+    "2024_VBSWWH_OSWW_C2V1p5_13p6TeV_5f_LO": {
+        "all_events": [
+            192.79275588719804,
+            null
+        ],
+        "exactly0lep": [
+            152.8587201143996,
+            null
+        ],
+        "exactly0lep_exactly2fj": [
+            38.72001649999992,
+            null
+        ],
+        "exactly0lep_exactly1fj": [
+            62.63944338880015,
+            null
+        ],
+        "exactly0lep_leq2fj": [
+            145.64935393119993,
+            null
+        ]
+    }
+}

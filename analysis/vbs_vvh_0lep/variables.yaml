@@ -1,0 +1,128 @@
+met:
+  expression: met.pt
+  hist:
+    bins: 180
+    min: 0
+    max: 750
+  plot:
+    xlabel: MET [GeV]
+
+metphi:
+  expression: met.phi
+  hist:
+    bins: 180
+    min: -3.1416
+    max: 3.1416
+  plot:
+    xlabel: MET phi
+
+scalarptsum_lep:
+  expression: ak.sum(lep.pt, axis=1)
+  hist:
+    bins: 100
+    min: 0
+    max: 2000
+  plot:
+    xlabel: Scalar PT sum leptons [GeV]
+
+l0_pt:
+  expression: ak.fill_none(lep[:, 0:1].pt, -1)
+  hist:
+    bins: 50
+    min: 0
+    max: 1000
+  plot:
+    xlabel: Leading lepton PT [GeV]
+
+l0_eta:
+  expression: ak.fill_none(lep[:, 0:1].eta, 0)
+  hist:
+    bins: 50
+    min: -5
+    max: 5
+  plot:
+    xlabel: Leading lepton eta
+
+mass_l0l1:
+  expression: ak.fill_none((lep[:, 0:1] + lep[:, 1:2]).mass, 0)
+  hist:
+    bins: 100
+    min: 0
+    max: 2000
+  plot:
+    xlabel: Mass l0 l1 [GeV]
+
+dr_l0l1:
+  expression: ak.fill_none(lep[:, 0:1].delta_r(lep[:, 1:2]), 0)
+  hist:
+    bins: 50
+    min: 0
+    max: 5
+  plot:
+    xlabel: Delta R l0 l1
+
+fj0_pt:
+  expression: ak.fill_none(fatjets[:, 0:1].pt, -1)
+  hist:
+    bins: 50
+    min: 0
+    max: 1000
+  plot:
+    xlabel: Leading fatjet PT [GeV]
+
+fj0_mass:
+  expression: ak.fill_none(fatjets[:, 0:1].mass, 0)
+  hist:
+    bins: 50
+    min: 0
+    max: 500
+  plot:
+    xlabel: Leading fatjet mass [GeV]
+
+nfatjets:
+  expression: nfatjets
+  hist:
+    bins: 10
+    min: 0
+    max: 10
+  plot:
+    xlabel: Number of fatjets
+
+njets:
+  expression: njets
+  hist:
+    bins: 10
+    min: 0
+    max: 10
+  plot:
+    xlabel: Number of jets
+
+nleps:
+  expression: ak.num(lep)
+  hist:
+    bins: 10
+    min: 0
+    max: 10
+  plot:
+    xlabel: Number of leptons
+
+# Add more variables as needed, following the same structure
+# For tagger scores (0-1 range):
+fj0_particleNet_XbbVsQCD:
+  expression: ak.fill_none(fatjets[:, 0:1].particleNet_XbbVsQCD, 0)
+  hist:
+    bins: 50
+    min: 0
+    max: 1
+  plot:
+    xlabel: fj0 particleNet XbbVsQCD score
+
+# For masses like mjj_max_any (assume derived_var for mjj_max_any)
+mjj_max_any:
+  expression: mjj_max_any  # Assume pre-computed in derived_vars
+  hist:
+    bins: 100
+    min: 0
+    max: 2000
+  plot:
+    xlabel: Max mjj any jets [GeV]

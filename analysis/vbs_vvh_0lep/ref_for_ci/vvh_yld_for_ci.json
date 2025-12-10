@@ -1,0 +1,24 @@
+{
+    "UL17_WWZJetsTo4L2Nu": {
+        "all_events": [
+            13.779460762439454,
+            null
+        ],
+        "exactly1lep_exactly1fj": [
+            0.07903510315820231,
+            null
+        ],
+        "presel": [
+            0.003642418477885872,
+            null
+        ],
+        "preselHFJ": [
+            0.0009346156204694184,
+            null
+        ],
+        "preselVFJ": [
+            0.00028793766390956626,
+            null
+        ]
+    }
+}

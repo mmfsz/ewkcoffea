@@ -1,0 +1,23 @@
+{
+    "channels": [
+        "conda-forge"
+    ],
+    "dependencies": [
+        "dill=0.4.0=pyhd8ed1ab_0",
+        "python=3.9.23",
+        "xrootd=5.8.1=py39h787ae68_0",
+        "conda",
+        "conda-pack=0.8.1=pyhd8ed1ab_1",
+        "setuptools==70.3.0",
+        "root=6.32.10=py39hfcbb7ad_0",
+        "pip=25.1.1=pyh8b19718_0",
+        {
+            "pip": [
+                "xgboost==2.1.4",
+                "mt2==1.3.0",
+                "coffea==0.7.22"
+            ]
+        }
+    ],
+    "name": "base"
+}

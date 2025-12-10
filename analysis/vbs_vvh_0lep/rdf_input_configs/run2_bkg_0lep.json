@@ -1,0 +1,19 @@
+{
+    "xsec": -999,
+    "year": "",
+    "treeName": "Events",
+    "histAxisName": "",
+    "options": "",
+    "WCnames": [],
+    "files": [
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_QCD/bkg.root"
+    ],
+    "nEvents": -999,
+    "nGenEvents": -999,
+    "nSumOfWeights": -999,
+    "isData": false,
+    "path": "",
+    "nSumOfLheWeights": [
+    ]
+}
+

@@ -1,0 +1,18 @@
+{
+    "xsec": -999,
+    "year": "",
+    "treeName": "Events",
+    "histAxisName": "",
+    "options": "",
+    "WCnames": [],
+    "files": [
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ//run2_0Lep2FJ_sig_c2v_1p5_c3_1p0_infer-v31/sig.root"
+    ],
+    "nEvents": -999,
+    "nGenEvents": -999,
+    "nSumOfWeights": -999,
+    "isData": false,
+    "path": "",
+    "nSumOfLheWeights": [
+    ]
+}

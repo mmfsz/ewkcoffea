@@ -1,0 +1,26 @@
+cuts:  # Atomic, reusable cuts
+  always_true: '(events.met.pt == events.met.pt)'
+  pass_met_triggers: '(events.Pass_MetTriggers == 1)'
+  not_pass_met_triggers: '~(events.Pass_MetTriggers == 1)'
+  met_pt_100: '(events.met.pt > 100)'
+  met_pt_200: '(events.met.pt > 200)'
+  met_sig_20: '(events.met.significance > 20)'
+
+cutflows:  # Composed from cut references
+  atomic_cuts:
+    mode: individual
+    all_events: 'always_true'
+    met_pt_100: 'met_pt_100'
+    met_pt_200: 'met_pt_200'
+  
+  test_cum:
+    mode: cumulative
+    all_events: 'always_true'
+    met_pt_100: 'met_pt_100'
+    met_pt_200: 'met_pt_200'
+
+  test_nm1:
+    mode: n_minus_1
+    all_events: 'always_true'
+    met_pt_100: 'met_pt_100'
+    met_pt_200: 'met_pt_200'
