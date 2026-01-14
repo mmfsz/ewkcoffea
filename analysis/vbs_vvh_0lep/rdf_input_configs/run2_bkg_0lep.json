@@ -6,7 +6,14 @@
     "options": "",
     "WCnames": [],
     "files": [
-        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_QCD/bkg.root"
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_QCD/bkg.root",
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_diboson/bkg.root",
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_EWK/bkg.root",
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_ST/bkg.root",
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_triboson/bkg.root",
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_ttbar/bkg.root",
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_VJets/bkg.root",
+        "/data/userdata/mmazza/vbsvvhAnalysis/preselection/0Lep2FJ/run2_bkg_ttX/bkg.root"
     ],
     "nEvents": -999,
     "nGenEvents": -999,

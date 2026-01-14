@@ -1,4 +1,4 @@
-import copy
+git import copy
 import hist
 
 # Get the list of categories on the sparse axis
@@ -33,7 +33,7 @@ def group(h, oldname, newname, grouping):
                     grouping_slim[grouping_name] = []
                 grouping_slim[grouping_name].append(proc)
             #else:
-            #    print(f"WARNING: process {proc} not in this hist")
+            #   print(f"WARNING: --> group(): process {proc} not in this hist")
 
     # From Nick: https://github.com/CoffeaTeam/coffea/discussions/705#discussioncomment-4604211
     hnew = hist.Hist(
@@ -42,7 +42,7 @@ def group(h, oldname, newname, grouping):
         storage=h.storage_type(),
     )
     for i, indices in enumerate(grouping_slim.values()):
-        hnew.view(flow=True)[i] = h[{oldname: indices}][{oldname: sum}].view(flow=True)
+        hnew.view(flow=True)[i] = h[{oldname: indices}][{oldname: sum}].view(flow=True) # add bin entries and variances linearly
 
     return hnew
 

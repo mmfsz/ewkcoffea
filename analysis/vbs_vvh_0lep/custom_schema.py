@@ -23,6 +23,7 @@ class RDFSchema(NanoAODSchema):
         "lepton": "PtEtaPhiMCollection",
         "jet": "PtEtaPhiMCollection",
         "fatjet": "PtEtaPhiMCollection",
+        "met": "MissingET",
         "gen_h": "PtEtaPhiMCollection",
         "gen_b1": "PtEtaPhiMCollection",
         "gen_b2": "PtEtaPhiMCollection",
@@ -34,5 +35,4 @@ class RDFSchema(NanoAODSchema):
         "gen_v2q2": "PtEtaPhiMCollection",
         "gen_vbs1": "PtEtaPhiMCollection",
         "gen_vbs2": "PtEtaPhiMCollection",
-        "met": "MissingET",
     }

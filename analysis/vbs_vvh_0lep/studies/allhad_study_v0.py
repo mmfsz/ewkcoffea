@@ -11,6 +11,9 @@ import matplotlib.pyplot as plt
 import mplhep as hep
 plt.style.use(hep.style.CMS)
 import shutil
+import warnings
+warnings.filterwarnings("ignore", message="List indexing selection is experimental")
+
 
 HTML_PC = "/home/users/kmohrman/ref_scripts/html_stuff/index.php"
 
@@ -29,9 +32,11 @@ def extract_yields(histo_dict, output_dir, hist_name="met", categories=None, out
     :param output_json: Boolean to trigger JSON output (optional).
     :return: Dict of yields {process: {category: [value, uncertainty]}}
     """
+    print("--> extract_yields()")
     if hist_name not in histo_dict:
         raise ValueError(f"Histogram '{hist_name}' not found in histo_dict.")
-    
+    else: 
+        print(f"  Using histogram {hist_name} to obtain yields")
     h = histo_dict[hist_name]
     
     processes = list(h.axes["process"])
@@ -126,12 +131,11 @@ def draw_extra_text(h_counts, h_bins, text, logY=False, ax=None, fontsize=16):
         )
 
 def plot_histograms(histo_dict, output_dir, variables=None, categories=None, systematic="nominal", groups=None,
-                    density=False, logY=False, title=None, fontsize=16, leg_title=None,
+                    density=False, logY=False, title=None, fontsize=14, leg_title=None,
                     drawCMSLabel=False, CoM=13.6, CMSFlag="Simulation Preliminary", extra_text=None, save_format="png", 
                     variables_def=None):
     """
     Plot histograms for specified variables and categories, with optional process grouping.
-    Adapted to match old plotVar style with CMS formatting.
     
     :param histo_dict: The loaded Coffea dict_accumulator containing histograms.
     :param output_dir: Directory to save plots.
@@ -150,6 +154,7 @@ def plot_histograms(histo_dict, output_dir, variables=None, categories=None, sys
     :param extra_text: Optional extra text to draw (e.g., category info).
     :param variables_def: Dict of {var_name: Variable} for custom settings (e.g., xlabel, logY).
     """
+    print(f"variables = {variables}")
     if variables is None:
         variables = [k for k in histo_dict if isinstance(histo_dict[k], Hist)]
     
@@ -157,27 +162,35 @@ def plot_histograms(histo_dict, output_dir, variables=None, categories=None, sys
         print("No variables to plot.")
         return
     
-    first_h = histo_dict[variables[0]]
+    #first_h = histo_dict[variables[0]]
+    first_h = histo_dict["met_pt"]
     
     if categories is None:
         categories = list(first_h.axes["category"])
+    print(f"categories = {categories}")
     
     all_processes = list(first_h.axes["process"])
+    print(f"all_processes = {all_processes}")
     
     if groups is None:
         groups = {p: [p] for p in all_processes}
-    
+
+    # Create figure ONCE outside the loop and reuse it
+    fig, ax = plt.subplots(figsize=(8, 8))
+
     for cat in categories:
         for var in variables:
             if var not in histo_dict:
                 print(f"Skipping missing histogram: {var}")
                 continue
+            else: 
+                print(f"Retrieving histogram {var}")
             
             h = histo_dict[var]
             
             # Check if the histogram has the expected axes
             if "process" not in h.axes.name or "category" not in h.axes.name or "systematic" not in h.axes.name:
-                print(f"Skipping histogram without required axes: {var}")
+                print(f"Skipping histogram {var} without required axes")
                 continue
             
             # Apply custom Variable settings if provided
@@ -191,22 +204,36 @@ def plot_histograms(histo_dict, output_dir, variables=None, categories=None, sys
                 if var_def.extraTag:
                     custom_extraTag = var_def.extraTag
 
-            fig, ax = plt.subplots(figsize=(8, 8))  # Larger square for CMS style proportions
-            
+            # Clear the axes for reuse (much faster than creating new figure)
+            ax.clear()
+
             h_counts = []  # To collect counts for draw_extra_text
             h_bins = None  # To collect bins
-            
+
+            # Slice category and systematic ONCE outside the group loop
+            h_cat = h[{"category": cat, "systematic": systematic}]
+            var_axis_name = h_cat.axes[-1].name
+
             for group_name, procs in groups.items():
                 # Filter to existing processes
                 existing_procs = [p for p in procs if p in all_processes]
                 if not existing_procs:
                     continue
-                
-                # Sum histograms for the group
-                h_group = sum(h[{"process": p, "category": cat, "systematic": systematic}] for p in existing_procs)
-                
+
+                # Select all processes at once and project (sums over process axis)
+                h_group = h_cat[{"process": existing_procs}].project(var_axis_name)
+
+                # Skip first bin (often contains spike at 0 for non-existent objects)
+                if "truth" in var_axis_name:
+                    h_group = h_group[1:]
+
                 # Plot with step style and collect data for text positioning
                 h_group.plot(ax=ax, label=group_name, histtype="step", linewidth=2, density=density)
+                # Extract year from the first process (assuming all processes in the group share the same year)
+                # if existing_procs:
+                #     year = existing_procs[0].split('_')[0]
+                #     h_group = h_group[{"year": year}]
+                    
                 if h_bins is None:
                     h_bins = h_group.axes[0].edges  # Get bins from first hist
                 h_counts.append(h_group.values())  # Collect counts per group
@@ -265,24 +292,25 @@ def plot_histograms(histo_dict, output_dir, variables=None, categories=None, sys
             
             plot_path = os.path.join(save_dir, f"{plot_name}.{save_format}")
             fig.savefig(plot_path, bbox_inches="tight")
-            shutil.copyfile(HTML_PC, os.path.join(save_dir,"index.php"))
-            plt.close(fig)
-            print(f"Saved plot: {save_dir}")
+            print(f"Saved plot: {plot_path}")
+
+    # Close figure when done with all plots
+    plt.close(fig)
 
 def main():
-    parser = argparse.ArgumentParser(description="Process Coffea histogram pickle file for yield studies.")
+    parser = argparse.ArgumentParser(description="Process Coffea histogram pickle file.")
     parser.add_argument("input_pkl", help="Path to the input pkl.gz file.")
-    parser.add_argument("-p", "--hist_placeholder", default="met", help="Histogram name to use as placeholder for yields (default: 'met').")
+    parser.add_argument("-p", "--hist-placeholder", default="met_pt", help="Histogram name to use as placeholder for yields (default: 'met_pt').")
     parser.add_argument("--outdir", default="output/", help="Output directory to store studies.")
     parser.add_argument("--projdir", default="proj_test/", help="Output sub-directory to store studies in separate project.")
-    parser.add_argument("--output_csv", action='store_true', help="Enable CSV output for yields.")
-    parser.add_argument("--output_json", action='store_true', help="Enable JSON output for yields.")
-    parser.add_argument("--do_plot", action='store_true', help="Enable plotting of histograms.")
-    parser.add_argument("--do_yields", action='store_true', help="Extract yield table (turn corresponding flags on to store to csv or json).")
-    parser.add_argument("--use_variables", default=None, help="Comma-separated list of variables to plot (default: all).")
-    parser.add_argument("--use_categories", default=None, help="Comma-separated list of categories to plot (default: all).")
-    parser.add_argument("--process_groups", default=None, help="Path to JSON file defining process groups {group_name: [proc1, proc2, ...]}.")
-    parser.add_argument("--variables_def", default=None, help="Path to python file defining variables_dict = {name: Variable(...)}.")
+    parser.add_argument("--output-csv", action='store_true', help="Enable CSV output for yields.")
+    parser.add_argument("--output-json", action='store_true', help="Enable JSON output for yields.")
+    parser.add_argument("--do-plots", action='store_true', help="Enable plotting of histograms.")
+    parser.add_argument("--do-yields", action='store_true', help="Extract yield table (turn corresponding flags on to store to csv or json).")
+    parser.add_argument("--use-variables", default=None, help="Comma-separated list of variables to plot (default: all).")
+    parser.add_argument("--use-categories", default=None, help="Comma-separated list of categories (or cutflows) to plot (default: all).")
+    parser.add_argument("--process-groups", default=None, help="Path to JSON file defining process groups {group_name: [proc1, proc2, ...]}.")
+    parser.add_argument("--variables-def", default=None, help="Path to python file defining variables_dict = {name: Variable(...)}.")
     
     args = parser.parse_args()
     
@@ -293,9 +321,9 @@ def main():
     
     # Compute output directory
     output_dir = os.path.join(args.outdir, args.projdir)
-    
     # Create the output directory if it doesn't exist
     os.makedirs(output_dir, exist_ok=True)
+
     
     use_variables = args.use_variables.split(",") if args.use_variables else None
     use_categories = args.use_categories.split(",") if args.use_categories else None
@@ -310,25 +338,18 @@ def main():
         with open(args.process_groups, "r") as f:
                 groups = json.load(f)
         print(f" Groups: ")
-        print(f"   {use_categories}")
+        print(f"   {groups}")
     print("==="*10)
 
 
-    # Load variables dictionary for plotting info
-    variables_def = None
-    if args.variables_def:
-        # Load the variables_dict from the file
-        local_vars = {}
-        exec(open(args.variables_def).read(), local_vars)
-        variables_def = local_vars.get('variables_dict', None)
-        if variables_def is None:
-            raise ValueError("variables_def file must define 'variables_dict'")
-            
+   
     if args.do_yields:
+        if not args.output_json and not args.output_csv:
+            args.output_json = True
         extract_yields(histo_dict, output_dir, hist_name=args.hist_placeholder, categories=use_categories,
                        output_csv=args.output_csv, output_json=args.output_json)
     
-    if args.do_plot:
+    if args.do_plots:
         plot_histograms(histo_dict, output_dir, variables=use_variables, categories=use_categories, groups=groups)
 
 if __name__ == "__main__":

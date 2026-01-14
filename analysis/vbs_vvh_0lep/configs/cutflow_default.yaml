@@ -2,25 +2,109 @@ cuts:  # Atomic, reusable cuts
   always_true: '(events.met.pt == events.met.pt)'
   pass_met_triggers: '(events.Pass_MetTriggers == 1)'
   not_pass_met_triggers: '~(events.Pass_MetTriggers == 1)'
-  met_pt_100: '(events.met.pt > 100)'
-  met_pt_200: '(events.met.pt > 200)'
+  met_pt_g150: '(events.met.pt > 150)'
+  met_pt_g200: '(events.met.pt > 200)'
   met_sig_20: '(events.met.significance > 20)'
+  nfj_geq1: 'var["nfatjets"] >= 1'
+  nfj_eq1: 'var["nfatjets"] == 1'
+  nfj_geq2: 'var["nfatjets"] >= 2'
+  nj_geq1: 'var["njets_tot"] >= 1'
+  nj_geq2: 'var["njets_tot"] >= 2'
+
+  nbtagsl_geq1: 'var["nbtagsl"] >= 1'
+  nbtagsl_geq2: 'var["nbtagsl"] >= 2'
+  jbscore0_bscore_g0p5: 'var["jbscore0_bscore"] > 0.5'
+
+  mjjmax_g250GeV: 'var["mjj_max"] > 250'
+  mjjmax_g1000GeV: 'var["mjj_max"] > 1000'
+  detajj_g3: 'var["deta_max"] > 3'
+  
+  higgs_mass_region: 'objects["fatjets_padded"][:,0].msoftdrop >= 110'
+  v_mass_region: 'objects["fatjets_padded"][:,0].msoftdrop < 110'
+  check_scores_overlap: '(objects["maxHbbAK8"].HbbScore > 0.5) & (objects["maxWqqAK8"].WqqScore > 0.5)'
+  fj0_particleNet_ZvsQCD_g0p6: 'var["fj0_particleNet_ZvsQCD"] > 0.6'
+  dphi_met_fj0_g0p6: 'var["fj0_met_dphi"] > 0.6'
+
+  # H vs W/Z categorization for 1-FJ events using score ratio
+  # HvsWZ = Hbb / (Hbb + Wqq + eps), > 0.5 means more Higgs-like
+  fj0_is_higgs: 'var["fj0_HvsWZ_score"] > 0.5'
+  fj0_is_v: 'var["fj0_HvsWZ_score"] <= 0.5'
+
+  # Truth matching for fj0 (signal only) - for efficiency studies
+  # Returns False for background samples where truth field doesn't exist
+  fj0_truth_is_H: '(events.truth.h_idx == 0) if "truth" in events.fields else ak.zeros_like(events.met.pt, dtype=bool)'
+  fj0_truth_is_V: '((events.truth.v1_idx == 0) | (events.truth.v2_idx == 0)) if "truth" in events.fields else ak.zeros_like(events.met.pt, dtype=bool)'
+  # Correct tagger decisions
+  fj0_tagger_correct_H: 'fj0_truth_is_H & fj0_is_higgs'
+  fj0_tagger_correct_V: 'fj0_truth_is_V & fj0_is_v'
+
+  presel: 'nfj_geq1 & nj_geq2 & mjjmax_g250GeV & nbtagsl_geq1'
+
 
 cutflows:  # Composed from cut references
-  atomic_cuts:
+
+  all_events:
     mode: individual
     all_events: 'always_true'
-    met_pt_100: 'met_pt_100'
-    met_pt_200: 'met_pt_200'
+    
+  atomic_cuts:
+    mode: individual
+    presel_jbscore0_bscore_g0p5: 'presel & jbscore0_bscore_g0p5'
+    presel_mjjmax_g1000GeV: 'presel & mjjmax_g1000GeV'
+    presel_fj0_particleNet_ZvsQCD_g0p6: 'presel & fj0_particleNet_ZvsQCD_g0p6'
+    presel_higgs_mass_region: 'presel & higgs_mass_region'
+    presel_v_mass_region: 'presel & v_mass_region'
+    presel_check_scores_overlap: 'presel & check_scores_overlap'
   
   test_cum:
     mode: cumulative
     all_events: 'always_true'
-    met_pt_100: 'met_pt_100'
-    met_pt_200: 'met_pt_200'
+    met_pt_g150: 'met_pt_g150'
+    met_pt_g200: 'met_pt_g200'
 
   test_nm1:
     mode: n_minus_1
     all_events: 'always_true'
-    met_pt_100: 'met_pt_100'
-    met_pt_200: 'met_pt_200'
+    met_pt_g150: 'met_pt_g150'
+    met_pt_g200: 'met_pt_g200'
+
+  presel:
+    mode: cumulative
+    nfj_geq1: 'nfj_geq1'
+    nj_geq2: 'nj_geq2'
+    mjjmax_g250GeV: 'mjjmax_g250GeV'
+    nbtagsl_geq1: 'nbtagsl_geq1'
+
+  # 1FJ+MET preselection (common to H and V branches)
+  allhad_1FJMET:
+    mode: cumulative
+    presel_met_pt_g150: 'presel & met_pt_g150'
+    detajj_g3: 'detajj_g3'
+    nfj_eq1: 'nfj_eq1'
+    dphi_met_fj0_g0p6: 'dphi_met_fj0_g0p6'
+
+  # Branch into H and V categories after 1FJMET preselection
+  allhad_1FJMET_H:
+    mode: cumulative
+    presel_1fjmet_H: 'presel & met_pt_g150 & detajj_g3 & nfj_eq1 & dphi_met_fj0_g0p6 & fj0_is_higgs'
+
+  allhad_1FJMET_V:
+    mode: cumulative
+    presel_1fjmet_V: 'presel & met_pt_g150 & detajj_g3 & nfj_eq1 & dphi_met_fj0_g0p6 & fj0_is_v'
+
+  # Tagger efficiency (signal only)
+  # Efficiency_H = yield(tagger_correct_H) / yield(truth_is_H)
+  # Efficiency_V = yield(tagger_correct_V) / yield(truth_is_V)
+  1FJMET_tagger_eff:
+    mode: individual
+    presel_1fj: 'presel & nfj_eq1'
+    truth_is_H: 'presel & nfj_eq1 & fj0_truth_is_H'
+    truth_is_V: 'presel & nfj_eq1 & fj0_truth_is_V'
+    tagger_correct_H: 'presel & nfj_eq1 & fj0_tagger_correct_H'
+    tagger_correct_V: 'presel & nfj_eq1 & fj0_tagger_correct_V'
+
+
+
+  allhad_2FJ:
+    mode: cumulative
+    nfj_geq2: 'presel & nfj_geq2'

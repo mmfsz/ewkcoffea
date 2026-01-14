@@ -1,0 +1,7 @@
+cuts:  # Atomic, reusable cuts
+  always_true: '(events.met.pt == events.met.pt)'
+
+cutflows:  # Composed from cut references
+  atomic_cuts:
+    mode: individual
+    all_events: 'always_true'

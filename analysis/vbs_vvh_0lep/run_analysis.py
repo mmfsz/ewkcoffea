@@ -15,7 +15,7 @@ NanoAODSchema.warn_missing_crossrefs = False
 import topcoffea.modules.remote_environment as remote_environment
 
 LST_OF_KNOWN_EXECUTORS = ["futures","work_queue","iterative"]
-LST_OF_KNOWN_PROCESSORS = ["semilep","semilep_nano", "allhad", "test"]
+LST_OF_KNOWN_PROCESSORS = ["semilep","semilep_nano", "allhad_old", "0lep"]
 
 
 if __name__ == '__main__':
@@ -28,7 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--chunksize','-s' , default=100000, help = 'Number of events per chunk')
     parser.add_argument('--nchunks','-c'   , default=None, help = 'You can choose to run only a number of chunks')
     parser.add_argument('--outname','-o'   , default='hists', help = 'Name of the output file with histograms')
-    parser.add_argument('--outpath',         default='output', help = 'Name of the output directory')
+    parser.add_argument('--outpath',         default=None, help = 'Name of the output sub-directory in output/')
     parser.add_argument('--treename'       , default='Events', help = 'Name of the tree inside the files')
     parser.add_argument('--do-systs', action='store_true', help = 'Compute systematic variations')
     parser.add_argument('--skip-obj-systs', action='store_true', help = 'Skip systematic variations that impact obj kinematics')
@@ -36,12 +36,14 @@ if __name__ == '__main__':
     parser.add_argument('--skip-cr', action='store_true', help = 'Skip all control region categories')
     parser.add_argument('--siphon' , action='store_true', help = 'Siphon BDT data')
     parser.add_argument('--wc-list', action='extend', nargs='+', help = 'Specify a list of Wilson coefficients to use in filling histograms.')
-    parser.add_argument('--hist-list', action='extend', nargs='+', help = 'Specify a list of histograms to fill.')
+    parser.add_argument('--hist-list', action='extend', nargs='+', help = 'Specify a list of histograms to fill (space or comma separated).')
     parser.add_argument('--port', default='9123-9130', help = 'Specify the Work Queue port. An integer PORT or an integer range PORT_MIN-PORT_MAX.')
     parser.add_argument('--processor', '-p', default='semilep', help = 'Which processor to execute', choices=LST_OF_KNOWN_PROCESSORS)
-    parser.add_argument('--project', default=None, help = 'Name of input cutflow config file and name of output project directory, e.g. histos/{project}')
-    parser.add_argument('--cutflow', default=None, help = "Specify which cutflows to use")
+    parser.add_argument('--project', default=None, help = 'Name of input cutflow config file and name of output project directory, e.g. output/{project}. If None, default cutflow file is used and output dir is output/histos.')
+    parser.add_argument('--cutflow', default=None, help = "Comma-separated list of cutflow names to use (e.g. 'presel,allhad_2FJ,allhad_1FJMET').")
+    parser.add_argument('--debug', action='store_true', help = "Enable debug mode with timing logs")
     parser.add_argument('--n_minus_1', action='store_true', help = "Use this to plot n-1 plots instead of cutflow")
+    parser.add_argument('--store-truth', action='store_true', help='Store truth-matched objects and histograms (signal samples only)')
 
 
     args = parser.parse_args()
@@ -61,6 +63,9 @@ if __name__ == '__main__':
     skip_cr    = args.skip_cr
     wc_lst = args.wc_list if args.wc_list is not None else []
 
+    # Parse comma-separated cutflow names into a list
+    cutflow_lst = [cf.strip() for cf in args.cutflow.split(',')] if args.cutflow else None
+
     # Import the proper processor, based on option specified
     if args.processor == "semilep":
         import analysis_processor_semilep as analysis_processor
@@ -69,10 +74,10 @@ if __name__ == '__main__':
         import analysis_processor_semilep_fromnano as analysis_processor
         defaultSchema = NanoAODSchema
     elif args.processor == "allhad":
-        import analysis_processor_allhad as analysis_processor
+        import analysis_processor_allhad_old as analysis_processor
         defaultSchema = RDFSchema
-    elif args.processor == "test":
-        import analysis_processor_test as analysis_processor
+    elif args.processor == "0lep":
+        import analysis_processor_0lep as analysis_processor
         defaultSchema = RDFSchema
 
     # Check that if on UF login node, we're using WQ
@@ -96,13 +101,24 @@ if __name__ == '__main__':
             port.append(port[0])
 
     # Figure out which hists to include
-    if args.hist_list == ["few"]:
-        # Here we hardcode a reduced list of a few hists
-        hist_lst = ["j0pt", "njets", "njets_counts", "nbtagsl", "nleps", "met", "l0pt", "abs_pdgid_sum"]
+    # Parse hist_list: support both space-separated and comma-separated
+    if args.hist_list is not None:
+        # Flatten any comma-separated values within the list
+        hist_lst = []
+        for item in args.hist_list:
+            hist_lst.extend([h.strip() for h in item.split(',') if h.strip()])
     else:
-        # We want to specify a custom list
-        # If we don't specify this argument, it will be None, and the processor will fill all hists
-        hist_lst = args.hist_list
+        hist_lst = None
+
+    if hist_lst == ["few"]:
+        # Here we hardcode a reduced list of a few hists (must match names in config_dense_vars.py)
+        hist_lst = ["met_pt", "njets_central", "njets_forward", "njets_tot", "nfatjets", "scalarptsum_jets"]
+
+    # Print which histograms will be filled
+    if hist_lst is None:
+        print(">> Histograms: ALL (no --hist-list specified)")
+    else:
+        print(f">> Histograms: {hist_lst}")
 
 
     ### Load samples from json
@@ -212,9 +228,9 @@ if __name__ == '__main__':
         print('No Wilson coefficients specified')
 
     if args.processor == "2FJMET":
-        processor_instance = analysis_processor.AnalysisProcessor(samplesdict,wc_lst,args.n_minus_1,args.project,args.cutflow)
-    elif args.processor == "test":
-        processor_instance = analysis_processor.AnalysisProcessor(samplesdict,args.project,args.cutflow)
+        processor_instance = analysis_processor.AnalysisProcessor(samplesdict,wc_lst,args.n_minus_1,args.project,cutflow_lst)
+    elif args.processor == "0lep":
+        processor_instance = analysis_processor.AnalysisProcessor(samplesdict, args.project, cutflow_lst, hist_lst, args.debug, store_truth=args.store_truth)
     else:
         processor_instance = analysis_processor.AnalysisProcessor(samplesdict,wc_lst,hist_lst,do_systs,skip_obj_systs,skip_sr,skip_cr,siphon_bdt_data=siphon)
 
@@ -322,10 +338,10 @@ if __name__ == '__main__':
         print("Processing time: %1.2f s with %i workers (%.2f s cpu overall)" % (dt, nworkers, dt*nworkers, ))
 
     # Save the output
-    outpath = outpath+f'/{args.project}' if args.project is not None else outpath+'/histos/'
+    outpath = 'output/'+f'{args.outpath}/' if args.outpath is not None else 'output/'
     os.makedirs(outpath, exist_ok=True)
-    if args.cutflow is not None:
-        outname = f'{outname}_{args.cutflow}'
+    if cutflow_lst is not None:
+        outname = f'{outname}_{"_".join(cutflow_lst)}'
     out_pkl_file = os.path.join(outpath,outname+".pkl.gz")
     print(f"\nSaving output in {out_pkl_file}...")
     with gzip.open(out_pkl_file, "wb") as fout:

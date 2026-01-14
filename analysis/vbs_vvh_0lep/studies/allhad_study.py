@@ -13,6 +13,9 @@ import mplhep as hep
 plt.style.use(hep.style.CMS)
 import shutil
 
+
+# OUTDATED. Possibly never worked?
+
 HTML_PC = "/home/users/kmohrman/ref_scripts/html_stuff/index.php"
 
 CLR_LST = ['#d55e00', '#e69f00', '#f0e442', '#009e73', '#0072b2', '#56b4e9', '#cc79a7', '#6e3600', '#a17500'] 
